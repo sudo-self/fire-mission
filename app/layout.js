@@ -1,13 +1,7 @@
-import { initDatabase } from '../lib/db';
-import './globals.css';
+'use client'
 
-
-if (typeof window === 'undefined') {
-  initDatabase().catch(error => {
-    console.error('Database initialization failed:', error.message);
- 
-  });
-}
+import { SessionProvider } from "next-auth/react"
+import './globals.css'
 
 export default function RootLayout({ children }) {
   return (
@@ -18,7 +12,11 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#ffffff" />
       </head>
-      <body>{children}</body>
+      <body>
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+      </body>
     </html>
-  );
+  )
 }
