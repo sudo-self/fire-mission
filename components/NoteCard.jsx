@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Edit3, Trash2, CheckCircle, Circle, Lock } from 'lucide-react';
-import { useSession } from '@neonstack/auth/react';
+import { useSession } from 'next-auth/react';
 import { NOTE_TYPES, PRIORITIES } from '@/types';
 
 const priorityColors = {
@@ -19,8 +19,11 @@ const typeColors = {
 
 export default function NoteCard({ note, onEdit, onDelete, onToggleComplete }) {
   const [isDeleting, setIsDeleting] = useState(false);
-  const { session } = useSession();
+  const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
+
+  // Hide secret notes if not logged in
+  if (note.secret && !isLoggedIn) return null;
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -29,11 +32,17 @@ export default function NoteCard({ note, onEdit, onDelete, onToggleComplete }) {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${
-      note.completed ? 'border-gray-300 opacity-75' :
-      note.type === NOTE_TYPES.GOAL ? 'border-purple-500' :
-      note.type === NOTE_TYPES.EVENT ? 'border-orange-500' : 'border-blue-500'
-    }`}>
+    <div
+      className={`bg-white rounded-lg shadow-md p-4 border-l-4 ${
+        note.completed
+          ? 'border-gray-300 opacity-75'
+          : note.type === NOTE_TYPES.GOAL
+          ? 'border-purple-500'
+          : note.type === NOTE_TYPES.EVENT
+          ? 'border-orange-500'
+          : 'border-blue-500'
+      }`}
+    >
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           {note.type === NOTE_TYPES.GOAL && (
@@ -48,7 +57,11 @@ export default function NoteCard({ note, onEdit, onDelete, onToggleComplete }) {
               )}
             </button>
           )}
-          <h3 className={`font-semibold ${note.completed ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+          <h3
+            className={`font-semibold ${
+              note.completed ? 'line-through text-gray-500' : 'text-gray-900'
+            }`}
+          >
             {note.title}
           </h3>
         </div>
@@ -69,12 +82,8 @@ export default function NoteCard({ note, onEdit, onDelete, onToggleComplete }) {
         </div>
       </div>
 
-      <p className="text-gray-600 mb-3">
-        {note.secret && !isLoggedIn ? (
-          <span className="italic text-gray-400">🔒 This is a secret note. Login to view.</span>
-        ) : (
-          note.content
-        )}
+      <p className={`text-gray-600 mb-3 ${note.completed ? 'line-through text-gray-400' : ''}`}>
+        {note.content}
       </p>
 
       <div className="flex flex-wrap gap-2 text-sm">
@@ -94,7 +103,7 @@ export default function NoteCard({ note, onEdit, onDelete, onToggleComplete }) {
             Completed
           </span>
         )}
-        {note.secret && (
+        {note.secret && isLoggedIn && (
           <span className="flex items-center px-2 py-1 rounded-full bg-gray-800 text-white">
             <Lock className="w-3 h-3 mr-1" />
             Secret

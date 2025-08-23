@@ -1,25 +1,37 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { NOTE_TYPES, PRIORITIES } from '../types';
 
 export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+
   const [formData, setFormData] = useState({
     title: initialData.title || '',
     content: initialData.content || '',
     type: initialData.type || NOTE_TYPES.NOTE,
     priority: initialData.priority || PRIORITIES.MEDIUM,
-    due_date: initialData.due_date ? new Date(initialData.due_date).toISOString().slice(0, 16) : '',
-    secret: initialData.secret || false // 👈 Added secret toggle
+    due_date: initialData.due_date
+      ? new Date(initialData.due_date).toISOString().slice(0, 16)
+      : '',
+    secret: isLoggedIn ? (initialData.secret || false) : false
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    // Ensure secret notes can't be created without login
+    const submitData = { ...formData };
+    if (!isLoggedIn) submitData.secret = false;
+
+    onSubmit(submitData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-md border">
+      {/* Title */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
         <input
@@ -32,6 +44,7 @@ export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
         />
       </div>
 
+      {/* Type */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
         <select
@@ -45,6 +58,7 @@ export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
         </select>
       </div>
 
+      {/* Priority */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
         <select
@@ -58,6 +72,7 @@ export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
         </select>
       </div>
 
+      {/* Due Date */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Due Date & Time</label>
         <input
@@ -68,6 +83,7 @@ export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
         />
       </div>
 
+      {/* Content */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
         <textarea
@@ -80,18 +96,23 @@ export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
       </div>
 
       {/* Secret Toggle */}
-      <div>
-        <label className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            checked={formData.secret}
-            onChange={(e) => setFormData({ ...formData, secret: e.target.checked })}
-            className="form-checkbox h-4 w-4 text-red-600"
-          />
-          <span className="text-sm text-gray-700">Mark as secret</span>
-        </label>
-      </div>
+      {isLoggedIn ? (
+        <div>
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={formData.secret}
+              onChange={(e) => setFormData({ ...formData, secret: e.target.checked })}
+              className="form-checkbox h-4 w-4 text-red-600"
+            />
+            <span className="text-sm text-gray-700">Mark as secret</span>
+          </label>
+        </div>
+      ) : (
+        <p className="text-sm text-gray-400 italic">Login to mark a note as secret.</p>
+      )}
 
+      {/* Buttons */}
       <div className="flex gap-2 pt-4">
         <button
           type="submit"

@@ -17,6 +17,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { data: session, status } = useSession();
+  const isLoggedIn = !!session?.user;
 
   useEffect(() => {
     fetchNotes();
@@ -26,12 +27,16 @@ export default function Home() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/notes');
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
+      const res = await fetch('/api/notes');
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      let data = await res.json();
+
+      // Filter secret notes client-side if not logged in
+      if (!isLoggedIn) data = data.filter(note => !note.secret);
+
       setNotes(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error fetching notes:', error);
+    } catch (err) {
+      console.error('Error fetching notes:', err);
       setError('Failed to load notes. Please try again.');
       setNotes([]);
     } finally {
@@ -41,49 +46,47 @@ export default function Home() {
 
   const handleCreateNote = async (noteData) => {
     try {
-      if (noteData.secret && !session) {
+      if (noteData.secret && !isLoggedIn) {
         setError("You must be logged in to create secret notes.");
         return;
       }
-      const response = await fetch('/api/notes', {
+      const res = await fetch('/api/notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(noteData)
       });
-      if (response.ok) {
-        setShowForm(false);
-        fetchNotes();
-      } else throw new Error('Failed to create note');
-    } catch (error) {
-      console.error('Error creating note:', error);
+      if (!res.ok) throw new Error('Failed to create note');
+      setShowForm(false);
+      fetchNotes();
+    } catch (err) {
+      console.error('Error creating note:', err);
       setError('Failed to create note. Please try again.');
     }
   };
 
   const handleUpdateNote = async (noteData) => {
     try {
-      const response = await fetch(`/api/notes/${editingNote.id}`, {
+      const res = await fetch(`/api/notes/${editingNote.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(noteData)
       });
-      if (response.ok) {
-        setEditingNote(null);
-        fetchNotes();
-      } else throw new Error('Failed to update note');
-    } catch (error) {
-      console.error('Error updating note:', error);
+      if (!res.ok) throw new Error('Failed to update note');
+      setEditingNote(null);
+      fetchNotes();
+    } catch (err) {
+      console.error('Error updating note:', err);
       setError('Failed to update note. Please try again.');
     }
   };
 
   const handleDeleteNote = async (id) => {
     try {
-      const response = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
-      if (response.ok) fetchNotes();
-      else throw new Error('Failed to delete note');
-    } catch (error) {
-      console.error('Error deleting note:', error);
+      const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete note');
+      fetchNotes();
+    } catch (err) {
+      console.error('Error deleting note:', err);
       setError('Failed to delete note. Please try again.');
     }
   };
@@ -92,25 +95,27 @@ export default function Home() {
     try {
       const note = notes.find(n => n.id === id);
       if (!note) return;
-      const response = await fetch(`/api/notes/${id}`, {
+      const res = await fetch(`/api/notes/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...note, completed })
       });
-      if (response.ok) fetchNotes();
-      else throw new Error('Failed to update note');
-    } catch (error) {
-      console.error('Error toggling complete:', error);
+      if (!res.ok) throw new Error('Failed to update note');
+      fetchNotes();
+    } catch (err) {
+      console.error('Error toggling complete:', err);
       setError('Failed to update note. Please try again.');
     }
   };
 
-  const filteredNotes = Array.isArray(notes) ? notes.filter(note => {
-    if (filter === 'all') return true;
-    if (filter === 'completed') return note.completed;
-    if (filter === 'active') return !note.completed;
-    return note.type === filter;
-  }) : [];
+  const filteredNotes = Array.isArray(notes)
+    ? notes.filter(note => {
+        if (filter === 'all') return true;
+        if (filter === 'completed') return note.completed;
+        if (filter === 'active') return !note.completed;
+        return note.type === filter;
+      })
+    : [];
 
   if (loading) {
     return (
@@ -141,7 +146,9 @@ export default function Home() {
 
             {/* Navigation & Auth */}
             <div className="flex items-center space-x-4">
-              <nav className="flex items-center space-x-4">
+
+              {/* Navigation */}
+              <nav className="flex items-center space-x-2 sm:space-x-4">
                 <button
                   onClick={() => setFilter('note')}
                   className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -150,8 +157,7 @@ export default function Home() {
                       : 'text-gray-300 hover:text-white hover:bg-gray-700'
                   }`}
                 >
-                  <Book className="w-4 h-4 mr-1" />
-                  Notes
+                  <Book className="w-4 h-4 mr-1" /> Notes
                 </button>
                 <button
                   onClick={() => setFilter('goal')}
@@ -161,8 +167,7 @@ export default function Home() {
                       : 'text-gray-300 hover:text-white hover:bg-gray-700'
                   }`}
                 >
-                  <Target className="w-4 h-4 mr-1" />
-                  Goals
+                  <Target className="w-4 h-4 mr-1" /> Goals
                 </button>
                 <button
                   onClick={() => setFilter('event')}
@@ -172,60 +177,63 @@ export default function Home() {
                       : 'text-gray-300 hover:text-white hover:bg-gray-700'
                   }`}
                 >
-                  <Calendar className="w-4 h-4 mr-1" />
-                  Events
+                  <Calendar className="w-4 h-4 mr-1" /> Events
                 </button>
-                <div className="w-px h-6 bg-gray-600 mx-2"></div>
-                <button
-                  onClick={() => setActiveView('list')}
-                  className={`p-2 rounded-md transition-colors ${
-                    activeView === 'list'
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                  }`}
-                  title="List View"
-                >
-                  <Layout className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setActiveView('calendar')}
-                  className={`p-2 rounded-md transition-colors ${
-                    activeView === 'calendar'
-                      ? 'bg-gray-700 text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                  }`}
-                  title="Calendar View"
-                >
-                  <Grid className="w-4 h-4" />
-                </button>
+
+                {/* View toggles */}
+                <div className="flex items-center space-x-1 sm:ml-2">
+                  <button
+                    onClick={() => setActiveView('list')}
+                    className={`p-2 rounded-md transition-colors ${
+                      activeView === 'list'
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    }`}
+                    title="List View"
+                  >
+                    <Layout className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setActiveView('calendar')}
+                    className={`p-2 rounded-md transition-colors ${
+                      activeView === 'calendar'
+                        ? 'bg-gray-700 text-white'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    }`}
+                    title="Calendar View"
+                  >
+                    <Grid className="w-4 h-4" />
+                  </button>
+                </div>
               </nav>
 
-              {/* GitHub Login/Logout */}
+              {/* Auth Buttons */}
               <div className="flex items-center space-x-2 ml-4">
                 {status === "loading" ? (
-                  <span className="text-gray-400">Checking session...</span>
+                  <span className="text-gray-400 text-sm">Checking session...</span>
                 ) : session ? (
-                  <>
+                  <div className="flex items-center space-x-2">
                     <span className="text-gray-300 text-sm hidden sm:inline">
                       Hi, {session.user.name || session.user.email}
                     </span>
                     <button
                       onClick={() => signOut()}
-                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center space-x-1"
+                      className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 flex items-center space-x-1 text-sm"
                     >
-                      <span>Sign out</span>
+                      Sign out
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <button
                     onClick={() => signIn("github")}
-                    className="bg-black text-white px-3 py-1 rounded hover:bg-gray-900 flex items-center space-x-1"
+                    className="bg-black text-white px-3 py-1 rounded hover:bg-gray-900 flex items-center space-x-1 text-sm"
                   >
                     <Github className="w-4 h-4" />
                     <span>Login</span>
                   </button>
                 )}
               </div>
+
             </div>
           </div>
         </div>
@@ -297,44 +305,24 @@ export default function Home() {
         {/* Notes Content */}
         {activeView === 'list' ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
-            {filteredNotes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                onEdit={setEditingNote}
-                onDelete={handleDeleteNote}
-                onToggleComplete={handleToggleComplete}
-                session={session}
-              />
-            ))}
+            {filteredNotes.length > 0 ? (
+              filteredNotes.map((note) => (
+                <NoteCard
+                  key={note.id}
+                  note={note}
+                  onEdit={setEditingNote}
+                  onDelete={handleDeleteNote}
+                  onToggleComplete={handleToggleComplete}
+                  session={session}
+                />
+              ))
+            ) : (
+              <p className="text-center col-span-full text-gray-500">No notes to display</p>
+            )}
           </div>
         ) : (
           <div className="max-w-6xl mx-auto">
             <CalendarView notes={notes} />
-          </div>
-        )}
-
-        {/* Empty State */}
-        {filteredNotes.length === 0 && !loading && !showForm && (
-          <div className="text-center py-12">
-            <div className="w-24 h-24 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
-              <Book className="w-12 h-12 text-gray-500" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-800 mb-2">
-              No {filter !== 'all' ? filter + 's' : 'items'} yet
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {filter === 'all' && 'Get started by creating your first note, goal, or event!'}
-              {filter === 'note' && 'Start capturing your thoughts and ideas.'}
-              {filter === 'goal' && 'Set your first goal and track your progress.'}
-              {filter === 'event' && 'Schedule your first event or appointment.'}
-            </p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-red-600 to-yellow-500 text-white px-6 py-2 rounded-lg hover:from-red-700 hover:to-yellow-600"
-            >
-              Create your first {filter !== 'all' ? filter : 'item'}
-            </button>
           </div>
         )}
       </main>
