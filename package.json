@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.7",
     "@neondatabase/serverless": "^1.0.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.541.0",
