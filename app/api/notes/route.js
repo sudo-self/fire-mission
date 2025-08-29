@@ -3,26 +3,9 @@ import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
-async function ensureSecretColumn() {
-  await sql`
-    DO $$
-    BEGIN
-      IF NOT EXISTS (
-        SELECT 1
-        FROM information_schema.columns
-        WHERE table_name = 'notes' AND column_name = 'secret'
-      ) THEN
-        ALTER TABLE notes ADD COLUMN secret BOOLEAN DEFAULT false;
-      END IF;
-    END
-    $$;
-  `;
-}
 
 export async function GET() {
   try {
-    await ensureSecretColumn();
-
     const session = await getServerSession(authOptions);
     const isLoggedIn = !!session?.user;
 
@@ -36,7 +19,7 @@ export async function GET() {
 
     return NextResponse.json(notes);
   } catch (error) {
-    console.error('Database error in GET /api/notes:', error.message);
+    console.error('Database error in GET /api/notes:', error);
     return NextResponse.json(
       { error: 'Failed to fetch notes', message: error.message },
       { status: 500 }
@@ -44,31 +27,39 @@ export async function GET() {
   }
 }
 
+
 export async function POST(request) {
   try {
-    await ensureSecretColumn();
-
     const session = await getServerSession(authOptions);
     const isLoggedIn = !!session?.user;
 
-    const { title, content, type = 'note', priority = 'medium', due_date = null, secret = false } =
-      await request.json();
+    const {
+      title,
+      content,
+      type = 'note',
+      priority = 'medium',
+      due_date = null,
+      secret = false,
+    } = await request.json();
 
     if (secret && !isLoggedIn) {
-      return NextResponse.json({ error: 'Unauthorized to create secret note' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized to create secret note' },
+        { status: 401 }
+      );
     }
 
     const dueDateValue = due_date ? new Date(due_date).toISOString() : null;
 
-    const note = await sql`
+    const [note] = await sql`
       INSERT INTO notes (title, content, type, priority, due_date, secret)
       VALUES (${title}, ${content || ''}, ${type}, ${priority}, ${dueDateValue}, ${secret})
       RETURNING *
     `;
 
-    return NextResponse.json(note[0]);
+    return NextResponse.json(note);
   } catch (error) {
-    console.error('Database error in POST /api/notes:', error.message);
+    console.error('Database error in POST /api/notes:', error);
     return NextResponse.json(
       { error: 'Failed to create note', message: error.message },
       { status: 500 }

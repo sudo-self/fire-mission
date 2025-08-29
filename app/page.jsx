@@ -21,6 +21,19 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
   const isLoggedIn = !!session?.user;
+  const [rssItems, setRssItems] = useState([]);
+  const [rssUrl, setRssUrl] = useState("https://hnrss.org/frontpage");
+
+
+ // rss feed fetch
+useEffect(() => {
+  if (!rssUrl) return;
+  fetch(`/api/rss?url=${encodeURIComponent(rssUrl)}`)
+    .then((res) => res.json())
+    .then((data) => setRssItems(data))
+    .catch((err) => console.error("RSS fetch error:", err));
+}, [rssUrl]);
+
 
   // Memoized filtered notes
   const filteredNotes = useMemo(() => {
@@ -452,6 +465,61 @@ export default function Home() {
             <CalendarView notes={notes} />
           </div>
         )}
+{/* RSS Feed Widget */}
+<div className="mt-12 max-w-4xl mx-auto">
+  <div className="bg-white rounded-xl shadow-lg p-6">
+    <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+      <Book className="w-5 h-5 mr-2 text-red-600" />
+      RSS Feed
+    </h2>
+
+    {/* Input for URL */}
+    <div className="flex mb-4">
+      <input
+        type="text"
+        value={rssUrl}
+        onChange={(e) => setRssUrl(e.target.value)}
+        placeholder="Enter RSS feed URL..."
+        className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+      />
+      <button
+        onClick={() => setRssUrl(rssUrl)}
+        className="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700"
+      >
+        Load
+      </button>
+    </div>
+
+    {/* Feed List */}
+    {rssItems.length > 0 ? (
+      <ul className="space-y-3">
+        {rssItems.map((item, i) => (
+          <li
+            key={i}
+            className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition"
+          >
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-600 font-medium hover:underline"
+            >
+              {item.title}
+            </a>
+            <div className="text-sm text-gray-500 mt-1">
+              {item.pubDate && new Date(item.pubDate).toLocaleDateString()}
+            </div>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-gray-500">No feed items available</p>
+    )}
+  </div>
+</div>
+
+
+
       </main>
     </div>
   );
