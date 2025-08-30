@@ -10,7 +10,7 @@ import { NOTE_TYPES } from '../types';
 import { Book, Target, Calendar, Plus, Layout, Grid, Crown, Github, Menu, X, RefreshCw } from 'lucide-react';
 import { useSession, signIn, signOut } from "next-auth/react";
 
-// Separate RSS Feed Component for better organization
+
 function RssFeedWidget() {
   const [rssItems, setRssItems] = useState([]);
   const [rssUrl, setRssUrl] = useState("https://hnrss.org/frontpage");
@@ -41,7 +41,7 @@ function RssFeedWidget() {
       return;
     }
     
-    // Check cache first
+ 
     if (rssCache.current.has(rssUrl)) {
       setRssItems(rssCache.current.get(rssUrl));
       setError(null);
@@ -66,7 +66,7 @@ function RssFeedWidget() {
   }, [rssUrl]);
 
   useEffect(() => {
-    // Load saved RSS URL from localStorage
+
     const savedRssUrl = localStorage.getItem('rssUrl');
     if (savedRssUrl) {
       setRssUrl(savedRssUrl);
@@ -79,7 +79,7 @@ function RssFeedWidget() {
     }
   }, [rssUrl]);
 
-  // Initial load
+
   useEffect(() => {
     const timeoutId = setTimeout(fetchRss, 100);
     return () => clearTimeout(timeoutId);
@@ -101,7 +101,7 @@ function RssFeedWidget() {
           <select
             value={rssUrl}
             onChange={(e) => setRssUrl(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="w-full border border-gray-300 text-gray-800 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
           >
             {defaultFeeds.map(feed => (
               <option key={feed.url} value={feed.url}>
@@ -112,7 +112,7 @@ function RssFeedWidget() {
           </select>
         </div>
 
-        {/* URL Input */}
+  
         <div className="flex mb-4">
           <input
             type="text"
@@ -138,7 +138,7 @@ function RssFeedWidget() {
           </div>
         )}
 
-        {/* Feed List */}
+    
         {loading ? (
           <div className="text-center py-8">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto text-indigo-600" />
@@ -195,7 +195,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const isLoggedIn = !!session?.user;
 
-  // Memoized filtered notes
+
   const filteredNotes = useMemo(() => {
     if (!Array.isArray(notes)) return [];
     
@@ -207,9 +207,9 @@ export default function Home() {
     });
   }, [notes, filter]);
 
-  // Fetch notes with useCallback to prevent unnecessary recreations
+
   const fetchNotes = useCallback(async () => {
-    if (status === 'loading') return; // Wait for session to load
+    if (status === 'loading') return; 
     
     try {
       setLoading(true);
@@ -239,7 +239,7 @@ export default function Home() {
     fetchNotes();
   }, [fetchNotes]);
 
-  // API call handler
+
   const handleApiCall = async (url, options, successMessage) => {
     try {
       const res = await fetch(url, options);
@@ -247,7 +247,7 @@ export default function Home() {
       
       fetchNotes();
       if (successMessage) {
-        // Could add a toast notification here
+ 
         console.log(successMessage);
       }
       
@@ -323,13 +323,13 @@ export default function Home() {
 
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
-    // Close mobile menu when a filter is selected
+
     setMobileMenuOpen(false);
   };
 
   const handleViewChange = (newView) => {
     setActiveView(newView);
-    // Close mobile menu when a view is selected
+
     setMobileMenuOpen(false);
   };
 
@@ -344,18 +344,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
-      {/* Header */}
+
       <header className="bg-gray-800 shadow-sm border-b border-gray-700 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Logo and Mobile Menu Button */}
+
             <div className="flex items-center">
               <div className="w-8 h-8 bg-gradient-to-r from-red-600 to-yellow-500 rounded-lg flex items-center justify-center">
                 <Crown className="w-5 h-5 text-white" />
               </div>
               <span className="ml-2 text-xl font-bold text-white hidden sm:inline">King of Battle</span>
-              
-              {/* Mobile menu button */}
+         
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="ml-4 p-2 rounded-md text-gray-300 hover:text-white hover:bg-gray-700 sm:hidden"
@@ -366,7 +365,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Desktop Navigation & Auth */}
+
             <div className="hidden sm:flex items-center space-x-4">
               <nav className="flex items-center space-x-2 sm:space-x-4">
                 <button
@@ -411,7 +410,7 @@ export default function Home() {
                 </div>
               </nav>
 
-              {/* Auth Buttons */}
+      
               <div className="flex items-center space-x-2 ml-4">
                 {status === 'loading' ? (
                   <span className="text-gray-400 text-sm">Checking session...</span>
@@ -450,7 +449,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mobile Navigation Menu */}
+    
           {mobileMenuOpen && (
             <div className="sm:hidden bg-gray-800 pt-2 pb-4">
               <div className="grid grid-cols-2 gap-2 mb-4">
@@ -496,7 +495,7 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Mobile Auth Buttons */}
+      
               <div className="px-2 pt-2 pb-3 border-t border-gray-700">
                 {status === 'loading' ? (
                   <span className="text-gray-400 text-sm">Checking session...</span>
@@ -539,9 +538,9 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main Content */}
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Welcome */}
+
         <div className="text-center mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
             {filter === 'note' ? 'Notes' :
@@ -560,12 +559,12 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Error */}
+ 
         {error && (
           <ErrorMessage message={error} onDismiss={() => setError(null)} />
         )}
 
-        {/* Add New Button */}
+
         <div className="text-center mb-6">
           <button
             onClick={() => setShowForm(true)}
@@ -578,7 +577,7 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Form */}
+
         {(showForm || editingNote) && (
           <div className="mb-6 max-w-2xl mx-auto">
             <NoteForm
@@ -589,7 +588,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Notes Grid */}
+   
         {activeView === 'list' ? (
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
             {filteredNotes.length > 0 ? (
@@ -626,7 +625,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* RSS Feed Widget */}
+
         <RssFeedWidget />
       </main>
     </div>
