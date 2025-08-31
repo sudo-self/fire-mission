@@ -22,7 +22,7 @@ export default function NoteForm({ onSubmit, initialData = {}, onCancel }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Ensure secret notes can't be created without login
+
     const submitData = { ...formData };
     if (!isLoggedIn) submitData.secret = false;
 
