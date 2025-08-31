@@ -425,7 +425,23 @@ export default function Home() {
           </div>
         ) : (
           <div className="max-w-6xl mx-auto">
-            <CalendarView notes={notes} />
+          <CalendarView
+  notes={notes}
+  onEventCreate={(date) => {
+    setEditingNote({
+      type: 'event',
+      title: '',
+      description: '',
+      due_date: date,
+    });
+    setShowForm(true);
+  }}
+  onEventEdit={(event) => {
+    setEditingNote(event);
+    setShowForm(true);
+  }}
+/>
+
           </div>
         )}
         <RssFeedWidget />
