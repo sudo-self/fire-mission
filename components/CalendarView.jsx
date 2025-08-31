@@ -32,7 +32,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
   const [view, setView] = useState('month'); // 'month' or 'day'
   const [isClosing, setIsClosing] = useState(false);
 
-
+  // Memoize events for better performance
   const events = useMemo(() => 
     notes.filter((note) => note.type === 'event' && note.due_date)
     .map(event => ({
@@ -43,7 +43,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     [notes]
   );
 
-
+  // Generate calendar days with proper week structure
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -53,7 +53,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentDate]);
 
-
+  // Get events for a specific day
   const getEventsForDay = useCallback((day) => {
     return events.filter((event) => {
       if (!event.due_date) return false;
@@ -61,7 +61,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     });
   }, [events]);
 
-
+  // Navigation functions
   const navigateMonth = useCallback((direction) => {
     setCurrentDate(prev => direction === 1 ? addMonths(prev, 1) : subMonths(prev, 1));
   }, []);
@@ -70,7 +70,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     setCurrentDate(new Date());
   }, []);
 
-
+  // Modal functions
   const closeModal = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
@@ -91,7 +91,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     setSelectedDay(day);
   }, []);
 
-
+  // Event type styling
   const eventColors = {
     work: {
       bg: 'bg-green-50',
@@ -130,6 +130,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     default: <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0" />,
   };
 
+  // Group events by time for the day view
   const timeSlots = useMemo(() => {
     const slots = {};
     for (let hour = 7; hour < 20; hour++) {
@@ -144,79 +145,82 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
   }, [selectedDay, events]);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 max-w-6xl mx-auto font-sans">
+    <div className="bg-white rounded-lg md:rounded-2xl shadow-lg p-4 md:p-6 max-w-6xl mx-auto font-sans">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-4">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-blue-50 rounded-lg">
             <CalendarIcon className="w-5 h-5 text-blue-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">Calendar</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-gray-900">Calendar</h2>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4">
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden w-full md:w-auto">
             <button
               onClick={() => setView('month')}
-              className={`px-3 py-1 text-sm font-medium ${view === 'month' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`px-3 py-1 text-sm font-medium flex-1 md:flex-initial ${view === 'month' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Month
             </button>
             <button
               onClick={() => setView('day')}
-              className={`px-3 py-1 text-sm font-medium ${view === 'day' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`px-3 py-1 text-sm font-medium flex-1 md:flex-initial ${view === 'day' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               Day
             </button>
           </div>
 
-          <button
-            onClick={goToToday}
-            className="px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            Today
-          </button>
-
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full md:w-auto">
             <button
-              onClick={() => navigateMonth(-1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Previous month"
+              onClick={goToToday}
+              className="px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors flex-1 md:flex-initial"
             >
-              <ChevronLeft className="w-5 h-5" />
+              Today
             </button>
 
-            <h3 className="text-xl font-semibold text-gray-900 min-w-[180px] text-center">
-              {format(currentDate, 'MMMM yyyy')}
-            </h3>
+            <div className="flex items-center gap-1 md:gap-2">
+              <button
+                onClick={() => navigateMonth(-1)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Previous month"
+              >
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+
+              <h3 className="text-base md:text-xl font-semibold text-gray-900 min-w-[120px] md:min-w-[180px] text-center">
+                {format(currentDate, 'MMMM yyyy')}
+              </h3>
+
+              <button
+                onClick={() => navigateMonth(1)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Next month"
+              >
+                <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            </div>
 
             <button
-              onClick={() => navigateMonth(1)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Next month"
+              onClick={() => onEventCreate && onEventCreate(new Date())}
+              className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 md:flex-initial flex-1 justify-center"
             >
-              <ChevronRight className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
+              <span className="hidden md:inline">Add Event</span>
+              <span className="md:hidden">Add</span>
             </button>
           </div>
-
-          <button
-            onClick={() => onEventCreate && onEventCreate(new Date())}
-            className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Event</span>
-          </button>
         </div>
       </div>
 
       {view === 'month' ? (
         <>
           {/* Day headers */}
-          <div className="grid grid-cols-7 gap-2 mb-3">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+          <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2 md:mb-3">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
               <div
                 key={day}
-                className="text-center font-semibold text-gray-600 py-2 text-sm uppercase tracking-wide"
+                className="text-center font-semibold text-gray-600 py-1 md:py-2 text-xs md:text-sm uppercase tracking-wide"
               >
                 {day}
               </div>
@@ -224,7 +228,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
           </div>
 
           {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 md:gap-2">
             {calendarDays.map((day) => {
               const dayEvents = getEventsForDay(day);
               const isCurrentMonth = isSameMonth(day, currentDate);
@@ -236,7 +240,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                 <div
                   key={day.toISOString()}
                   onClick={() => handleDayClick(day)}
-                  className={`min-h-[120px] p-2 border rounded-lg transition-all cursor-pointer flex flex-col ${
+                  className={`min-h-[60px] md:min-h-[120px] p-1 md:p-2 border rounded-lg transition-all cursor-pointer flex flex-col ${
                     isCurrentMonth
                       ? isDayToday
                         ? 'bg-blue-50 border-blue-200 shadow-sm'
@@ -249,9 +253,9 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                   }`}
                 >
                   <div
-                    className={`text-sm font-medium mb-1 flex justify-between items-center ${
+                    className={`text-xs md:text-sm font-medium mb-0 md:mb-1 flex justify-between items-center ${
                       isDayToday
-                        ? 'inline-flex items-center justify-center w-6 h-6 ml-auto rounded-full bg-blue-500 text-white'
+                        ? 'inline-flex items-center justify-center w-5 h-5 md:w-6 md:h-6 ml-auto rounded-full bg-blue-500 text-white'
                         : 'text-gray-700'
                     }`}
                   >
@@ -259,29 +263,31 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                       {format(day, 'd')}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-blue-500"></span>
                     )}
                   </div>
 
-                  <div className="space-y-1 mt-auto overflow-hidden">
-                    {dayEvents.slice(0, 3).map((event) => {
+                  <div className="space-y-0.5 md:space-y-1 mt-auto overflow-hidden">
+                    {dayEvents.slice(0, 2).map((event) => {
                       const eventStyle = eventColors[event.subtype] || eventColors.default;
                       return (
                         <div
                           key={event.id}
                           onClick={(e) => handleEventClick(event, day, e)}
-                          className={`text-xs px-2 py-1 rounded-md truncate transition-colors flex items-center ${eventStyle.bg} ${eventStyle.text} ${eventStyle.border} ${eventStyle.hover}`}
+                          className={`text-[10px] md:text-xs px-1 py-0.5 md:px-2 md:py-1 rounded truncate transition-colors flex items-center ${eventStyle.bg} ${eventStyle.text} ${eventStyle.border} ${eventStyle.hover}`}
                           title={event.title}
                         >
-                          {eventTypeIcons[event.subtype] || eventTypeIcons.default}
+                          <span className="hidden md:inline">
+                            {eventTypeIcons[event.subtype] || eventTypeIcons.default}
+                          </span>
                           <span className="truncate">{event.title}</span>
                         </div>
                       );
                     })}
 
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 px-1">
-                        +{dayEvents.length - 3} more
+                    {dayEvents.length > 2 && (
+                      <div className="text-[10px] md:text-xs text-gray-500 px-0.5 md:px-1">
+                        +{dayEvents.length - 2} more
                       </div>
                     )}
                   </div>
@@ -291,20 +297,20 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
           </div>
         </>
       ) : (
- 
+        // Day View
         <div className="border rounded-lg overflow-hidden">
-          <div className="p-4 border-b bg-gray-50">
-            <h3 className="text-lg font-semibold text-gray-900">
+          <div className="p-3 md:p-4 border-b bg-gray-50">
+            <h3 className="text-base md:text-lg font-semibold text-gray-900">
               {format(currentDate, 'EEEE, MMMM d, yyyy')}
             </h3>
           </div>
-          <div className="max-h-[500px] overflow-y-auto">
+          <div className="max-h-[400px] md:max-h-[500px] overflow-y-auto">
             {Object.entries(timeSlots).map(([time, events]) => (
               <div key={time} className="flex border-b">
-                <div className="w-20 py-4 px-2 text-sm text-gray-500 font-medium border-r bg-gray-50">
+                <div className="w-16 md:w-20 py-3 md:py-4 px-1 md:px-2 text-xs md:text-sm text-gray-500 font-medium border-r bg-gray-50">
                   {time}
                 </div>
-                <div className="flex-1 p-2 min-h-[80px]">
+                <div className="flex-1 p-1 md:p-2 min-h-[60px] md:min-h-[80px]">
                   {events.length > 0 ? (
                     events.map(event => {
                       const eventStyle = eventColors[event.subtype] || eventColors.default;
@@ -315,14 +321,14 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                             setSelectedEvent(event);
                             setSelectedDay(event.due_date);
                           }}
-                          className={`p-2 rounded-lg mb-2 cursor-pointer ${eventStyle.full} border`}
+                          className={`p-2 rounded-lg mb-1 md:mb-2 cursor-pointer ${eventStyle.full} border`}
                         >
                           <div className="flex items-center">
                             {eventTypeIcons[event.subtype] || eventTypeIcons.default}
-                            <span className="font-medium">{event.title}</span>
+                            <span className="font-medium text-sm md:text-base">{event.title}</span>
                           </div>
                           {event.description && (
-                            <p className="text-sm mt-1 text-gray-700 truncate">{event.description}</p>
+                            <p className="text-xs md:text-sm mt-1 text-gray-700 truncate">{event.description}</p>
                           )}
                           <p className="text-xs mt-1 text-gray-500">
                             {format(event.due_date, 'h:mm a')}
@@ -331,7 +337,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                       );
                     })
                   ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                    <div className="h-full flex items-center justify-center text-gray-400 text-xs md:text-sm">
                       No events
                     </div>
                   )}
@@ -344,7 +350,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
 
       {/* Day/Event Modal */}
       <Transition show={!!selectedDay} as={Fragment}>
-        <Dialog onClose={closeModal} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <Dialog onClose={closeModal} className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -366,9 +372,9 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95"
           >
-            <Dialog.Panel className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <Dialog.Panel className="relative bg-white rounded-lg md:rounded-xl shadow-xl p-4 md:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
-                <Dialog.Title className="text-lg font-semibold text-gray-900">
+                <Dialog.Title className="text-base md:text-lg font-semibold text-gray-900">
                   {selectedDay ? format(selectedDay, 'EEEE, MMMM d, yyyy') : ''}
                 </Dialog.Title>
                 <button
@@ -381,10 +387,10 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
               </div>
 
               {selectedEvent ? (
-             
+                // Event detail view
                 <div>
-                  <div className={`p-4 rounded-lg mb-4 ${eventColors[selectedEvent.subtype]?.bg || eventColors.default.bg}`}>
-                    <h3 className="text-xl font-semibold mb-2">{selectedEvent.title}</h3>
+                  <div className={`p-3 md:p-4 rounded-lg mb-4 ${eventColors[selectedEvent.subtype]?.bg || eventColors.default.bg}`}>
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">{selectedEvent.title}</h3>
                     <div className="flex items-center text-sm text-gray-600 mb-2">
                       <CalendarIcon className="w-4 h-4 mr-2" />
                       {format(selectedEvent.due_date, 'EEEE, MMMM d, yyyy')}
@@ -408,20 +414,20 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                         onEventEdit && onEventEdit(selectedEvent);
                         closeModal();
                       }}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm md:text-base"
                     >
                       Edit
                     </button>
                     <button
                       onClick={closeModal}
-                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm md:text-base"
                     >
                       Close
                     </button>
                   </div>
                 </div>
               ) : (
-            
+                // Day events list
                 <>
                   <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                     {selectedDay && getEventsForDay(selectedDay).length > 0 ? (
@@ -437,9 +443,9 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                               {eventTypeIcons[event.subtype] || eventTypeIcons.default}
                             </div>
                             <div className="flex-1">
-                              <p className="font-medium text-gray-900">{event.title}</p>
+                              <p className="font-medium text-gray-900 text-sm md:text-base">{event.title}</p>
                               {event.description && (
-                                <p className="text-sm text-gray-700 mt-1 line-clamp-2">{event.description}</p>
+                                <p className="text-xs md:text-sm text-gray-700 mt-1 line-clamp-2">{event.description}</p>
                               )}
                               {event.due_date && (
                                 <p className="text-xs text-gray-500 mt-1">
@@ -453,8 +459,8 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                       })
                     ) : (
                       <div className="text-center py-6 text-gray-500">
-                        <CalendarIcon className="w-12 h-12 mx-auto text-gray-300 mb-2" />
-                        <p>No events scheduled for this day</p>
+                        <CalendarIcon className="w-10 h-10 md:w-12 md:h-12 mx-auto text-gray-300 mb-2" />
+                        <p className="text-sm md:text-base">No events scheduled for this day</p>
                       </div>
                     )}
                   </div>
@@ -464,7 +470,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
                       onEventCreate && onEventCreate(selectedDay);
                       closeModal();
                     }}
-                    className="mt-6 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    className="mt-6 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                   >
                     <Plus className="w-4 h-4" />
                     Add Event
