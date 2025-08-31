@@ -43,7 +43,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     [notes]
   );
 
-  // Generate calendar days with proper week structure
+
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentDate);
     const monthEnd = endOfMonth(currentDate);
@@ -53,7 +53,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
   }, [currentDate]);
 
-  // Get events for a specific day
+
   const getEventsForDay = useCallback((day) => {
     return events.filter((event) => {
       if (!event.due_date) return false;
@@ -61,7 +61,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     });
   }, [events]);
 
-  // Navigation functions
+
   const navigateMonth = useCallback((direction) => {
     setCurrentDate(prev => direction === 1 ? addMonths(prev, 1) : subMonths(prev, 1));
   }, []);
@@ -70,7 +70,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     setCurrentDate(new Date());
   }, []);
 
-  // Modal functions
+
   const closeModal = useCallback(() => {
     setIsClosing(true);
     setTimeout(() => {
@@ -91,7 +91,7 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     setSelectedDay(day);
   }, []);
 
-  // Event type styling
+
   const eventColors = {
     work: {
       bg: 'bg-green-50',
