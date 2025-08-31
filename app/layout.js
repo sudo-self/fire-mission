@@ -43,7 +43,7 @@ export default function RootLayout({ children }) {
             href="https://www.buymeacoffee.com/Jessew"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block px-4 py-2 bg-red-700 text-white font-bold rounded-lg shadow-lg hover:bg-black transition-colors flex items-center space-x-2"
+            className="inline-block px-4 py-2 bg-gray-700 text-white font-bold rounded-lg shadow-lg hover:bg-orange-500 transition-colors flex items-center space-x-2"
           >
             <span>🍺 Buy me a beer</span>
           </a>
