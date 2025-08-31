@@ -29,19 +29,21 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [view, setView] = useState('month'); // 'month' or 'day'
+  const [view, setView] = useState('month');
   const [isClosing, setIsClosing] = useState(false);
 
-  // Memoize events for better performance
-  const events = useMemo(() => 
-    notes.filter((note) => note.type === 'event' && note.due_date)
+
+const events = useMemo(() => 
+  notes
+    .filter((note) => note.type === 'event' && note.due_date)
     .map(event => ({
       ...event,
-      due_date: parseISO(event.due_date)
+      due_date: event.due_date ? parseISO(event.due_date) : null
     }))
+    .filter(event => event.due_date)
     .sort((a, b) => a.due_date - b.due_date),
-    [notes]
-  );
+  [notes]
+);
 
 
   const calendarDays = useMemo(() => {
@@ -130,19 +132,19 @@ export default function CalendarView({ notes, onEventCreate, onEventEdit }) {
     default: <CalendarIcon className="w-3 h-3 mr-1 flex-shrink-0" />,
   };
 
-  // Group events by time for the day view
-  const timeSlots = useMemo(() => {
-    const slots = {};
-    for (let hour = 7; hour < 20; hour++) {
-      const time = setHours(setMinutes(selectedDay, 0), hour);
-      slots[format(time, 'h a')] = events.filter(event => 
-        event.due_date && 
-        isSameDay(event.due_date, selectedDay) &&
-        event.due_date.getHours() === hour
-      );
-    }
-    return slots;
-  }, [selectedDay, events]);
+ const timeSlots = useMemo(() => {
+  if (!selectedDay) return {};
+  const slots = {};
+  for (let hour = 7; hour < 20; hour++) {
+    const time = setHours(setMinutes(selectedDay, 0), hour);
+    slots[format(time, 'h a')] = events.filter(event => 
+      event.due_date && 
+      isSameDay(event.due_date, selectedDay) &&
+      event.due_date.getHours() === hour
+    );
+  }
+  return slots;
+}, [selectedDay, events]);
 
   return (
     <div className="bg-white rounded-lg md:rounded-2xl shadow-lg p-4 md:p-6 max-w-6xl mx-auto font-sans">
