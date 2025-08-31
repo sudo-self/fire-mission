@@ -7,7 +7,7 @@ export default function RssFeedWidget() {
   const [rssItems, setRssItems] = useState([]);
   const [rssUrl, setRssUrl] = useState("https://hnrss.org/frontpage");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const rssCache = useRef(new Map());
 
   const defaultFeeds = [
@@ -16,7 +16,7 @@ export default function RssFeedWidget() {
     { name: 'Reddit Programming', url: 'https://www.reddit.com/r/programming/.rss' }
   ];
 
-  const validateUrl = (url: string) => {
+  const validateUrl = (url) => {
     try {
       const parsedUrl = new URL(url);
       return ['http:', 'https:'].includes(parsedUrl.protocol);
@@ -132,7 +132,7 @@ export default function RssFeedWidget() {
           </div>
         ) : rssItems.length > 0 ? (
           <div className="space-y-3 max-h-96 overflow-y-auto">
-            {rssItems.slice(0, 10).map((item: any, i: number) => (
+            {rssItems.slice(0, 10).map((item, i) => (
               <div
                 key={i}
                 className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition"
@@ -168,3 +168,4 @@ export default function RssFeedWidget() {
     </div>
   );
 }
+
